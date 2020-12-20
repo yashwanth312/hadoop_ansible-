@@ -1,0 +1,72 @@
+- hosts: all
+  vars_prompt:
+  - name: name_dir
+    prompt: Enter the directory for namenode - 
+    private: no
+  - name: data_dir
+    prompt: Enter the directory for datanode - 
+    private: no
+  - name: port
+    prompt: Enter the port number for the program - 
+    private: no
+
+  tasks:
+  - name: Fact for namenode
+    set_fact: 
+      nd: "{{ name_dir }}"
+  - name: FAct for datanode
+    set_fact:
+      dn: "{{ data_dir }}"
+  - name: Fact for port 
+    set_fact:
+      po: "{{ port }}"
+  - name:  Copying JDK software files
+    copy: 
+      src: /root/jdk-8u171-linux-x64.rpm
+      dest: /root/
+  - name: Copying HADOOP software files
+    copy: 
+      src: /root/hadoop-1.2.1-1.x86_64.rpm
+      dest: /root/
+  - name: Installing JDK 
+    command: "rpm -ivh jdk-8u171-linux-x64.rpm --force"
+  - name: Installing hadoop
+    command: "rpm -ivh hadoop-1.2.1-1.x86_64.rpm --force"
+
+
+- hosts: namenode
+  tasks:
+  - name: Creating directory for namenode
+    file:
+      path: /{{ nd }}
+      state: directory 
+  - name: Copying the hdfs file
+    template: 
+      src: "/root/task-11/namenode/hdfs-site.xml"
+      dest: "/etc/hadoop/hdfs-site.xml"
+  - name: Copying the core file
+    template:
+      src: "/root/task-11/namenode/core-site.xml"
+      dest: "/etc/hadoop/core-site.xml"
+  - name: Formatting the name node
+    command: "hadoop namenode -format -force"
+  - name: Starting the namnode services
+    command: "hadoop-daemon.sh start namenode"
+
+
+- hosts: datanode
+  tasks:
+  - name: Creating directory for datanode
+    file:
+      path: /{{ dn }}
+      state: directory
+  - name: Copying hdfs file to datanode
+    template: 
+      src: "/root/task-11/datanode/hdfs-site.xml"
+      dest: "/etc/hadoop/hdfs-site.xml"
+  - name: Copying core file to datanode
+    template: 
+      src: "/root/task-11/datanode/core-site.xml"
+      dest: "/etc/hadoop/core-site.xml"
+  - name: Starting datanode services
+    command: "hadoop-daemon.sh start datanode"
